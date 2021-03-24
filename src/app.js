@@ -1,22 +1,29 @@
 require('dotenv').config();
-const axios = require('axios');
-const FormData = require('form-data');
-const data = new FormData();
-const image = require('fs').readFileSync('image.png');
-data.append('image', image);
 
-axios({
-        method: 'post',
-        url: 'https://api.imgur.com/3/image',
-        headers: {
-            'Authorization': `Client-ID ${process.env.CLIENT_ID}`,
-            ...data.getHeaders()
-        },
-        data: data
-    })
-    .then((response) => {
-        console.log(JSON.stringify(response.data));
-    })
-    .catch((error) => {
-        console.log(error);
+const express = require('express');
+const app = express();
+
+app.get('/auth',
+    async (req, res) => {
+        // await require('./service/oauth')(req.body);
+        console.log('authorizing...');
+        const authURL =
+            new URL(`https://api.imgur.com/oauth2/authorize?client_id=${process.env.CLIENT_ID}&response_type=token&state=APPLICATION_STATE`);
+        res.redirect(authURL);
     });
+app.get('/',
+    async (req, res) => {
+        console.log("GOT RESPONSE:");
+        console.log(req.url);
+        console.log(req.query);
+        console.log(req.headers);
+        res.send(200);
+    });
+
+app.get('/upload',
+    async (req, res) => {
+        await require('./service/upload')();
+        res.send('Hello World');
+    });
+
+app.listen(process.env.PORT);
